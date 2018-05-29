@@ -9,11 +9,20 @@ import java.util.Arrays;
 public class CPU {
     private final int TAM_BUFFER_CARGA_FICHEROS=16384;
     Memoria memoria;
-    public void cargarArchivo(String ruta) throws FileNotFoundException, IOException{
+    
+    public CPU(){
+        memoria = new Memoria();
+    }
+    public void cargarArchivo(String ruta, int posInicio) throws FileNotFoundException, IOException{
         byte[] buffer = new byte[this.TAM_BUFFER_CARGA_FICHEROS];
         FileInputStream flujo=new FileInputStream(ruta);
         int bytesLeidos=flujo.read(buffer);
         byte[] bytesArchivo=Arrays.copyOf(buffer, bytesLeidos);   
+        int pos=posInicio;
+    }
+    
+    public void cargarArchivo(String ruta) throws FileNotFoundException, IOException{
+        cargarArchivo ( ruta, 0x0200 );
     }
     
     public byte getNibble (short word, int numNibble){
@@ -47,7 +56,24 @@ public class CPU {
         }
         return 0;
     }
+    
+    public int getNNN(short instruccion){
+        int nibble2=getNibble(instruccion, 2);
+        int nibble3=getNibble(instruccion, 3);
+        int nibble4=getNibble(instruccion, 3);
+        int resultado = (nibble2 << 8 ) + (nibble3 << 4) + nibble4;
+        return resultado;
+    }
+    
     public void ejecutar(int posInicioPrograma){
-        
+        int posInstruccionSiguiente=posInicioPrograma;
+        while (posInstruccionSiguiente < 0xfff){
+            short instruccion = memoria.getInstruccion(posInstruccionSiguiente);
+            int nibble1=this.getNibble(instruccion, 1);
+            if (nibble1==0){
+                
+            }
+            posInstruccionSiguiente += 2;
+        }
     }
 }

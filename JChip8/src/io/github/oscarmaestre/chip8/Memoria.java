@@ -26,4 +26,14 @@ public class Memoria {
             memoria[pos] = buffer[pos++];
         }
     }
+    
+    public String getVolcado(int posInicio, int posFinal){
+        String resultado="";
+        int pos=posInicio;
+        while (pos < posFinal){
+            byte b=this.read(pos++);
+            System.out.println(b);
+        }
+        return resultado;
+    }
 }
