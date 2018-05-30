@@ -9,9 +9,11 @@ import java.util.Arrays;
 public class CPU {
     private final int TAM_BUFFER_CARGA_FICHEROS=16384;
     Memoria memoria;
+    Pantalla pantalla;
     
-    public CPU(){
+    public CPU(Pantalla _pantalla){
         memoria = new Memoria();
+        pantalla= _pantalla;
     }
     public void cargarArchivo(String ruta, int posInicio) throws FileNotFoundException, IOException{
         byte[] buffer = new byte[this.TAM_BUFFER_CARGA_FICHEROS];
@@ -20,7 +22,13 @@ public class CPU {
         byte[] bytesArchivo=Arrays.copyOf(buffer, bytesLeidos);   
         int pos=posInicio;
     }
-    
+    public void dibujarAlgo(){
+        System.out.println("Dibujando");
+        for (int i=0; i<32; i++){
+            this.pantalla.activarPixel(i, i);
+            this.pantalla.actualizar();
+        }
+    }
     public void cargarArchivo(String ruta) throws FileNotFoundException, IOException{
         cargarArchivo ( ruta, 0x0200 );
     }

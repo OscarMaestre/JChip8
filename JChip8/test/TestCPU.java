@@ -5,7 +5,10 @@
  */
 
 import io.github.oscarmaestre.chip8.CPU;
+import io.github.oscarmaestre.chip8.Interfaz;
+import io.github.oscarmaestre.chip8.PantallaJPanel;
 import java.io.IOException;
+import javax.swing.JFrame;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -32,9 +35,19 @@ public class TestCPU {
     
     @Test
     public void pruebaVolcado() throws IOException {
+        JFrame frame=new JFrame();
         String fich="/home/usuario/Descargas/Roger.ch8";
-        CPU cpu=new CPU();
+        PantallaJPanel p=new PantallaJPanel();
+        p.setContextoGrafico(frame.getGraphics());
+        
+        CPU cpu=new CPU(p);
         cpu.cargarArchivo(fich);
+        
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                frame.setVisible(true);
+            }
+        });
     }
     
 }
