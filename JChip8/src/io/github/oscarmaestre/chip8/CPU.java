@@ -16,10 +16,10 @@ public class CPU {
     Pantalla pantalla;
     Teclado teclado;
     byte [] registros;
-    short[] pila;
-    short registroI;
-    short registroPC;
-    short registroSP;
+    int[] pila;
+    int registroI;
+    int registroPC;
+    int registroSP;
     Temporizador delay, sound;
     Random generadorAzar;
     public CPU(Pantalla _pantalla){
@@ -27,21 +27,21 @@ public class CPU {
         pantalla= _pantalla;
         teclado = new Teclado();
         registros= new byte[TAM_BANCO_REGISTROS];
-        pila = new short[TAM_PILA];
+        pila = new int[TAM_PILA];
         this.registroSP=0;
         generadorAzar=new Random();
         delay = new Temporizador();
         sound = new Temporizador();
     }
     
-    public void apilar(short direccion){
+    public void apilar(int direccion){
         this.registroSP++;
         pila[this.registroSP] = direccion;
         
     }
     
-    public short desapilar(){
-        short direccion=pila[this.registroSP];
+    public int desapilar(){
+        int direccion=pila[this.registroSP];
         this.registroSP--;
         return direccion;
     }
@@ -51,7 +51,12 @@ public class CPU {
         int bytesLeidos=flujo.read(buffer);
         byte[] bytesArchivo=Arrays.copyOf(buffer, bytesLeidos);   
         int pos=posInicio;
+        for (int i=0; i<bytesArchivo.length; i++){
+            this.memoria.write(pos, bytesArchivo[i]);
+            pos++;
+        }
     }
+    
     public void dibujarAlgo(){
         System.out.println("Dibujando");
         for (int i=0; i<32; i++){
@@ -61,9 +66,10 @@ public class CPU {
     }
     public void cargarArchivo(String ruta) throws FileNotFoundException, IOException{
         cargarArchivo ( ruta, 0x0200 );
+        this.registroPC=0x0200;
     }
     
-    public byte getNibble (short word, int numNibble){
+    public byte getNibble (int word, int numNibble){
         final int N1=0b1111000000000000;
         final int N2=0b0000111100000000;
         final int N3=0b0000000011110000;
@@ -96,15 +102,15 @@ public class CPU {
         return 0;
     }
     
-    public short  getNNN(short instruccion){
-        short nibble2=getNibble(instruccion, 2);
-        short nibble3=getNibble(instruccion, 3);
-        short nibble4=getNibble(instruccion, 4);
-        short resultado = (short) ((nibble2 << 8 ) + (nibble3 << 4) + nibble4);
+    public int  getNNN(int instruccion){
+        int nibble2=getNibble(instruccion, 2);
+        int nibble3=getNibble(instruccion, 3);
+        int nibble4=getNibble(instruccion, 4);
+        int resultado = (int) ((nibble2 << 8 ) + (nibble3 << 4) + nibble4);
         return resultado;
     }
     
-    public byte getKK(short instruccion){
+    public byte getKK(int instruccion){
         byte nibble3=getNibble(instruccion, 3);
         byte nibble4=getNibble(instruccion, 4);
         byte resultado =  (byte) ((nibble3 << 4) + nibble4);
@@ -113,22 +119,21 @@ public class CPU {
     
     public void ejecutar(int posInicioPrograma){
         int posInstruccionSiguiente=posInicioPrograma;
-        while (posInstruccionSiguiente < 0xfff){
-            short instruccion = memoria.getInstruccion(posInstruccionSiguiente);
-            int nibble1=this.getNibble(instruccion, 1);
-            if (nibble1==0){
-                
-            }
-            posInstruccionSiguiente += 2;
+        this.registroPC = posInicioPrograma;
+        while (true){
+            this.ejecutarInstruccion();
         }
     }
     
-    public byte getUltimoByte(short instruccion){
+    public byte getUltimoByte(int instruccion){
         return this.getKK(instruccion);
     }
     public void ejecutarInstruccion(){
-        short instruccion=memoria.getInstruccion(this.registroPC);
-        this.registroPC++;
+        int instruccion=memoria.getInstruccion(this.registroPC);
+        String instruccionHEX=String.format("0x%04X", instruccion);
+        System.out.print("En el PC:"+this.registroPC);
+        System.out.println(" estaba la instruccion "+instruccionHEX);
+        this.registroPC+=2;
         
         //Instruccion CLR
         if ( instruccion == 0x00e0 ){
@@ -143,12 +148,12 @@ public class CPU {
         
         int nibble1=this.getNibble(instruccion, 1);
         if (nibble1 == 1){
-            short NNN = this.getNNN(instruccion);
+            int NNN = this.getNNN(instruccion);
             this.JMP(NNN);
         } //Instruccion JMP
         
         if (nibble1 == 2) {
-            short NNN = this.getNNN(instruccion);
+            int NNN = this.getNNN(instruccion);
             this.CALL(NNN);
         } //Instruccion CALL
         
@@ -172,7 +177,7 @@ public class CPU {
         }
         
         /* El nibble 4 puede ser necesario */
-        short nibble4 = this.getNibble(instruccion, 4);
+        int nibble4 = this.getNibble(instruccion, 4);
         
         if ( nibble1 == 8) {
             if ( nibble4 == 0){
@@ -281,7 +286,7 @@ public class CPU {
         this.pantalla.borrar();
     } //Fin instruccion CLR
     
-    public void JMP(short NNN){
+    public void JMP(int NNN){
         this.registroPC = NNN;
     } //Fin instruccion JMP
 
@@ -289,60 +294,60 @@ public class CPU {
         this.registroPC = this.desapilar();
     } //Fin instruccion RTS
 
-    public void CALL(short NNN) {
+    public void CALL(int NNN) {
         this.apilar(this.registroPC);
         this.registroPC = NNN;
     }
 
-    public void SE(short instruccion) {
+    public void SE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
         byte KK = this.getKK(instruccion);
         
         byte valorRegistro = this.registros[numRegistro];
         if (valorRegistro == KK){
-            this.registroPC = (short) (this.registroPC + 2);
+            this.registroPC = (int) (this.registroPC + 2);
         }
     }
 
-    public void SNE(short instruccion) {
+    public void SNE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
         byte KK = this.getKK(instruccion);
         
         byte valorRegistro = this.registros[numRegistro];
         if (valorRegistro != KK){
-            this.registroPC = (short) (this.registroPC + 2);
+            this.registroPC = (int) (this.registroPC + 2);
         }
     }
     
-    public void SE2(short instruccion){
+    public void SE2(int instruccion){
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorRegistroX=this.registros[numRegistroX];
         byte valorRegistroY=this.registros[numRegistroY];
         if (valorRegistroX == valorRegistroY){
-            this.registroPC = (short) (this.registroPC + 2);
+            this.registroPC = (int) (this.registroPC + 2);
         }
     }
 
-    public void LDBYTE(short instruccion) {
+    public void LDBYTE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
         byte KK = this.getKK(instruccion);
         this.registros[numRegistro] = KK;
     }
 
-    public void ADD(short instruccion) {
+    public void ADD(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
         byte KK = this.getKK(instruccion);
         this.registros[numRegistro]+= KK;
     }
 
-    public void LDVXVY(short instruccion) {
+    public void LDVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         this.registros[numRegistroX] = this.registros[numRegistroY];
     }
 
-    public void ORVXVY(short instruccion) {
+    public void ORVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -351,7 +356,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public void ANDVXVY(short instruccion) {
+    public void ANDVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -360,7 +365,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
     
-    public void XORVXVY(short instruccion) {
+    public void XORVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -369,7 +374,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
     
-    public void ADDVXVY(short instruccion) {
+    public void ADDVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -383,7 +388,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
     
-    public void SUBVXVY(short instruccion) {
+    public void SUBVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -397,7 +402,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public void SHRVXVY(short instruccion) {
+    public void SHRVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte valorX = this.registros[numRegistroX];
         
@@ -410,7 +415,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public  void SUBNVXVY(short instruccion) {
+    public  void SUBNVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
@@ -424,7 +429,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public void SHLVXVY(short instruccion) {
+    public void SHLVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte valorX = this.registros[numRegistroX];
         if (valorX > 127 ){
@@ -436,29 +441,29 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public void SNEVXVY(short instruccion) {
+    public void SNEVXVY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte valorX = this.registros[numRegistroX];
         byte valorY = this.registros[numRegistroY];
         if (valorX != valorY){
-            this.registroPC = (short) (this.registroPC + 2);
+            this.registroPC = (int) (this.registroPC + 2);
         }
     }
 
-    public void LDINNN(short instruccion) {
-        short NNN = this.getNNN(instruccion);
+    public void LDINNN(int instruccion) {
+        int NNN = this.getNNN(instruccion);
         this.registroI = NNN;
     }
 
-    public void JMPNNN(short instruccion) {
-        short NNN = this.getNNN(instruccion);
+    public void JMPNNN(int instruccion) {
+        int NNN = this.getNNN(instruccion);
         byte valorV0 = this.registros[0];
-        short nuevaDireccion = (short) (NNN + valorV0);
+        int nuevaDireccion = (int) (NNN + valorV0);
         this.registroPC = nuevaDireccion;
     }
 
-    public void RAND(short instruccion) {
+    public void RAND(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte KK = this.getKK(instruccion);
         byte azar = (byte) this.generadorAzar.nextInt(255);
@@ -466,7 +471,7 @@ public class CPU {
         this.registros[numRegistroX] = resultado;
     }
 
-    public void DXYN(short instruccion) {
+    public void DXYN(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte n            = this.getNibble(instruccion, 4);
@@ -481,7 +486,7 @@ public class CPU {
         this.pantalla.dibujarSprite(bytesSprite, valorX, valorY);
     }
 
-    public void SKP(short instruccion) {
+    public void SKP(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte valorX = this.registros[numRegistroX];
         if (!teclado.teclaPulsada) return ;
@@ -490,7 +495,7 @@ public class CPU {
             this.registroPC += 2;
         }
     }
-    public void SKNP(short instruccion) {
+    public void SKNP(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte valorX = this.registros[numRegistroX];
         if (!teclado.teclaPulsada) return ;
@@ -500,12 +505,12 @@ public class CPU {
         }
     }
 
-    public void LDTIMER(short instruccion) {
+    public void LDTIMER(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         this.registros[numRegistroX] = this.delay.get();
     }
 
-    public void WAITKEY(short instruccion) {
+    public void WAITKEY(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
         while (!teclado.teclaPulsada());
         byte tecla=teclado.getValorTecla();
@@ -513,18 +518,18 @@ public class CPU {
         
     }
 
-    public void STOREI(short instruccion) {
+    public void STOREI(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
-        short direccion = this.registroI;
+        int direccion = this.registroI;
         for (int i=0; i<=numRegistroX; i++){
             byte valorMemoria=this.memoria.read(direccion);
             direccion++;
         }
     }
 
-    public void STOREV0(short instruccion) {
+    public void STOREV0(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
-        short direccion = this.registroI;
+        int direccion = this.registroI;
         for (int i=0; i<=numRegistroX; i++){
             byte valorRegistro=this.registros[i];
             this.memoria.write(direccion, valorRegistro);
@@ -532,12 +537,12 @@ public class CPU {
         }
     }
 
-    public void LOADCHAR(short instruccion) {
+    public void LOADCHAR(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
-        this.registroI = (short) (valorX * 5);
+        this.registroI = (int) (valorX * 5);
     }
 
-    public void BCD(short instruccion) {
+    public void BCD(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
         byte cantidad = this.registros[valorX];
         byte centenas = (byte) (cantidad / 100);
@@ -551,19 +556,19 @@ public class CPU {
         
     }
 
-    public void SETDELAY(short instruccion) {
+    public void SETDELAY(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
         delay.set(valorX);
     }
 
-    public void SETSOUND(short instruccion) {
+    public void SETSOUND(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
         sound.set(valorX);
     }
 
-    public void ADDI(short instruccion) {
+    public void ADDI(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
-        short nuevoI=(short) (this.registroI + valorX);
+        int nuevoI=(int) (this.registroI + valorX);
         this.registroI = nuevoI;
     }
     

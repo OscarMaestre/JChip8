@@ -6,6 +6,13 @@
 package io.github.oscarmaestre.chip8;
 
 import java.awt.Graphics;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -13,6 +20,10 @@ import java.awt.Graphics;
  */
 public class Interfaz extends javax.swing.JFrame {
 
+    private final int MODO_DETENIDO     = 0;
+    private final int MODO_PASO_A_PASO  = 1;
+    
+    int modoEjecucion=MODO_DETENIDO;
     CPU cpu;
     PantallaJPanel pantallaCPU;
     /**
@@ -46,39 +57,115 @@ public class Interfaz extends javax.swing.JFrame {
     private void initComponents() {
 
         pantalla = new javax.swing.JPanel();
+        btnPaso = new javax.swing.JButton();
+        btnEjecutar = new javax.swing.JButton();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        jMenuLoad = new javax.swing.JMenuItem();
+        jmenuTest = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        btnPaso.setText("Paso a paso");
+        btnPaso.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPasoActionPerformed(evt);
+            }
+        });
+
+        btnEjecutar.setText("Sin parar");
+        btnEjecutar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEjecutarActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pantallaLayout = new javax.swing.GroupLayout(pantalla);
         pantalla.setLayout(pantallaLayout);
         pantallaLayout.setHorizontalGroup(
             pantallaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 655, Short.MAX_VALUE)
+            .addGroup(pantallaLayout.createSequentialGroup()
+                .addGap(252, 252, 252)
+                .addComponent(btnPaso)
+                .addGap(18, 18, 18)
+                .addComponent(btnEjecutar)
+                .addContainerGap(289, Short.MAX_VALUE))
         );
         pantallaLayout.setVerticalGroup(
             pantallaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 430, Short.MAX_VALUE)
+            .addGroup(pantallaLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(pantallaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnPaso)
+                    .addComponent(btnEjecutar))
+                .addContainerGap(437, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(28, 28, 28)
-                .addComponent(pantalla, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(34, 34, 34)
-                .addComponent(pantalla, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        getContentPane().add(pantalla, java.awt.BorderLayout.CENTER);
+
+        jMenu1.setText("File");
+
+        jMenuLoad.setText("Load");
+        jMenuLoad.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuLoadActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuLoad);
+
+        jmenuTest.setText("Test");
+        jmenuTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jmenuTestActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jmenuTest);
+
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jMenuLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuLoadActionPerformed
+        JFileChooser dlgAbrirFichero=new JFileChooser();
+        int codigoExito;
+        codigoExito = dlgAbrirFichero.showOpenDialog(this);
+        if (codigoExito == JFileChooser.APPROVE_OPTION){
+            String path=dlgAbrirFichero.getSelectedFile().getAbsolutePath();
+            byte[] encoded;
+            try {
+                //encoded = Files.readAllBytes(Paths.get(path));
+                cpu.cargarArchivo(path);
+            } catch (IOException ex) {
+                Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
+            }            
+        }
+    }//GEN-LAST:event_jMenuLoadActionPerformed
+
+    private void btnPasoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPasoActionPerformed
+        cpu.ejecutarInstruccion();
+    }//GEN-LAST:event_btnPasoActionPerformed
+
+    private void jmenuTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmenuTestActionPerformed
+        String rutaJuegoPrueba="/home/usuario/Descargas/Roger.ch8";
+        try {
+            cpu.cargarArchivo(rutaJuegoPrueba);
+            System.out.println("Cargado el archivo");
+            System.out.println(this.cpu.memoria.getVolcado(0x200, 0xfff));
+        } catch (IOException ex) {
+            Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jmenuTestActionPerformed
+
+    private void btnEjecutarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEjecutarActionPerformed
+        cpu.ejecutar(0x200);
+    }//GEN-LAST:event_btnEjecutarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -117,6 +204,13 @@ public class Interfaz extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnEjecutar;
+    private javax.swing.JButton btnPaso;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuLoad;
+    private javax.swing.JMenuItem jmenuTest;
     private javax.swing.JPanel pantalla;
     // End of variables declaration//GEN-END:variables
 }

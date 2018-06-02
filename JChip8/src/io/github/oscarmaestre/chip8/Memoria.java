@@ -1,7 +1,7 @@
 package io.github.oscarmaestre.chip8;
 
 public class Memoria {
-    private byte[] memoria=new byte[0xfff];
+    private byte[] memoria=new byte[4096];
     public byte read (int pos){
         return memoria[pos];
     }
@@ -10,8 +10,13 @@ public class Memoria {
     }
     
     
-    public short getInstruccion (int pos){
-        short instruccion = (short) (( memoria[pos] << 8 ) + memoria[pos+1]);
+    public int getInstruccion (int pos){
+        int byte1 =(int) memoria[pos];
+        int byte2= (int) memoria[pos+1];
+        byte1 = (byte1 << 8) & 0xff00;
+        byte2 = byte2 & 0x00ff;
+        System.out.println(byte1+" "+ byte2);
+        int instruccion = byte1 | byte2;
         return instruccion;
     }
     /** 
@@ -32,7 +37,8 @@ public class Memoria {
         int pos=posInicio;
         while (pos < posFinal){
             byte b=this.read(pos++);
-            System.out.println(b);
+            String byteFormateado=String.format("%02X", b);
+            resultado+=byteFormateado + " ";
         }
         return resultado;
     }
