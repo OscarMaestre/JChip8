@@ -23,7 +23,7 @@ public class Memoria {
         };
         byte[] rom=new byte[romIntegers.length];
         for (int i=0; i<romIntegers.length; i++){
-            rom[i]=(byte) romIntegers[i];
+            rom[i]=(byte) ((byte) romIntegers[i] & 0b11111111);
         }
         return rom;
     }

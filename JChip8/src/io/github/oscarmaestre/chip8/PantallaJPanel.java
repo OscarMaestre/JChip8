@@ -2,6 +2,7 @@ package io.github.oscarmaestre.chip8;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.Arrays;
 import javax.swing.JPanel;
 
 public class PantallaJPanel extends Pantalla{
@@ -21,10 +22,10 @@ public class PantallaJPanel extends Pantalla{
     @Override
     public void actualizar() {
         
-        for (int fila=0; fila < this.FILAS; fila++){
-            for (int columna = 0 ; columna < this.COLUMNAS; columna++){
-                if (this.memoria[fila][columna]){
-                    contextoGrafico.fillRect(fila*escala, columna*escala, escala, escala);
+        for (int fila=0; fila < this.MAX_Y; fila++){
+            for (int columna = 0 ; columna < this.MAX_X; columna++){
+                if (this.memoria[columna][fila]){
+                    contextoGrafico.fillRect(columna*escala,fila*escala,  escala, escala);
                 }
             }
         }
@@ -32,10 +33,9 @@ public class PantallaJPanel extends Pantalla{
 
     @Override
     public void borrar() {
-        for (int fila=0; fila < this.FILAS; fila++){
-            for (int columna = 0 ; columna < this.COLUMNAS; columna++){
-                this.memoria[fila][columna] = false;
-                
+        for (int x=0; x<this.MAX_X; x++){
+            for (int y=0; y<this.MAX_Y; y++){
+                this.memoria[x][y]=false;
             }
         }
     }

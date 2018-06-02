@@ -86,10 +86,17 @@ public class PruebaNibble {
         int resultado= cpu.getUltimoByte(instruccion) ;
         Assert.assertEquals(255, resultado);        
     }
-    
-    
-    
-    
-    
+    @Test 
+    public void pruebaString(){
+        byte[] bytes={ (byte)0xf0, (byte)0x90, (byte)0x90, (byte)0x90, (byte)0xf0};
+        String cad=cpu.getStringDesdeSprite(bytes);
+        System.out.println(cad);
+    }
+    @Test
+    public void pruebaString2(){
+        byte[] bytes={ (byte)0xff, (byte)0x01, (byte)0x80, (byte)0x04, (byte)0x00, (byte)0x0a };
+        String cad=cpu.getStringDesdeSprite(bytes);
+        System.out.println(cad);
+    }
 }
 

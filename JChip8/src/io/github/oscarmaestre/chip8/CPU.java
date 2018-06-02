@@ -32,7 +32,25 @@ public class CPU {
         delay = new Temporizador();
         sound = new Temporizador();
     }
+    public String getStringDesdeSprite(byte[] bytes){
+        String resultado="";
+        for (int nByte=0; nByte<bytes.length; nByte++){
+            byte b=bytes[nByte];
+            String s1 = String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
+            resultado+=s1;
+        }
+        return resultado;
+    }
     
+    public String[] getStrings(byte[] bytes){
+        String[] resultado=new String[bytes.length];
+        for (int nByte=0; nByte<bytes.length; nByte++){
+            byte b=bytes[nByte];
+            String s1 = String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
+            resultado[nByte]=s1;
+        }
+        return resultado;
+    }
     public void apilar(int direccion){
         this.registroSP++;
         pila[this.registroSP] = direccion;
@@ -58,10 +76,13 @@ public class CPU {
     
     public void dibujarAlgo(){
         System.out.println("Dibujando");
-        for (int i=0; i<32; i++){
-            this.pantalla.activarPixel(i, i);
-            this.pantalla.actualizar();
-        }
+        this.pantalla.activarPixel(0, 0);
+        this.pantalla.activarPixel(2, 0);
+        this.pantalla.activarPixel(3, 0);
+        this.pantalla.activarPixel(63, 0);
+        
+        this.pantalla.actualizar();
+        
     }
     public void cargarArchivo(String ruta) throws FileNotFoundException, IOException{
         cargarArchivo ( ruta, 0x0200 );
@@ -493,17 +514,20 @@ public class CPU {
         
         byte[] bytesSprite = new byte[n];
         int posParaLeer = this.getRegistroI();
+        
+        
         for (int nByte = 0; nByte < n ; nByte++){
             byte dato=this.memoria.read(posParaLeer);
-            String d=String.format("%02x", dato);
-            
-            System.out.println("Dato:"+d+ " de la posicion:"+posParaLeer);
+            //String d=String.format("%02x", dato);
+            //System.out.println("Dato:"+d+ " de la posicion:"+posParaLeer);
             bytesSprite[ nByte ] = dato;
             posParaLeer++;
             
         }
-        System.out.println("Dibujando en "+valorX+ ","+valorY);
-        this.pantalla.dibujarSprite(bytesSprite, valorX, valorY);
+        
+        //System.out.println("Dibujando en "+valorX+ ","+valorY);
+        String[] strSprite=this.getStrings(bytesSprite);
+        this.pantalla.dibujarSprite(strSprite, valorX, valorY);
     }
 
     public void SKP(int instruccion) {
