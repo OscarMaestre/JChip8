@@ -2,6 +2,9 @@ package io.github.oscarmaestre.chip8;
 
 public class Memoria {
     private byte[] memoria=new byte[4096];
+    public Memoria(){
+        this.cargarROMEstandar();
+    }
     public byte read (int pos){
         return memoria[pos];
     }
@@ -9,13 +12,35 @@ public class Memoria {
         memoria[pos]=dato;
     }
     
-    
+    public byte[] getROM(){
+        int[] romIntegers={
+            0xf0,0x90,0x90,0x90,0xf0, //0
+            0x20,0x60,0x20,0x20,0x70, //1
+            0xf0,0x10,0xf0,0x80,0xf0, //2
+            0xf0,0x10,0xf0,0x10,0xf0, //3
+            0x90,0x90,0xf0,0x10,0x10, //4
+            0xf0,0x80,0xf0,0x10,0xf0, //5
+        };
+        byte[] rom=new byte[romIntegers.length];
+        for (int i=0; i<romIntegers.length; i++){
+            rom[i]=(byte) romIntegers[i];
+        }
+        return rom;
+    }
+    public void cargarROM(byte[] rom){
+        for (int i=0; i<rom.length; i++){
+            this.write(i, rom[i]);
+        }
+    }
+    public void cargarROMEstandar(){
+        byte[] rom=this.getROM();
+        this.cargarROM(rom);
+    }
     public int getInstruccion (int pos){
         int byte1 =(int) memoria[pos];
         int byte2= (int) memoria[pos+1];
         byte1 = (byte1 << 8) & 0xff00;
         byte2 = byte2 & 0x00ff;
-        System.out.println(byte1+" "+ byte2);
         int instruccion = byte1 | byte2;
         return instruccion;
     }

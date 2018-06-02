@@ -21,6 +21,7 @@ public class Teclado {
     }
 
     public void setValorTecla(byte valorTecla) {
+        System.out.println(valorTecla);
         this.valorTecla = valorTecla;
         this.setTeclaPulsada(true);
     }

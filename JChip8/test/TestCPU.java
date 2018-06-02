@@ -7,6 +7,7 @@
 import io.github.oscarmaestre.chip8.CPU;
 import io.github.oscarmaestre.chip8.Interfaz;
 import io.github.oscarmaestre.chip8.PantallaJPanel;
+import io.github.oscarmaestre.chip8.Teclado;
 import java.io.IOException;
 import javax.swing.JFrame;
 import org.junit.After;
@@ -39,8 +40,8 @@ public class TestCPU {
         String fich="/home/usuario/Descargas/Roger.ch8";
         PantallaJPanel p=new PantallaJPanel();
         p.setContextoGrafico(frame.getGraphics());
-        
-        CPU cpu=new CPU(p);
+        Teclado t=new Teclado();
+        CPU cpu=new CPU(p, t);
         cpu.cargarArchivo(fich);
         
         java.awt.EventQueue.invokeLater(new Runnable() {

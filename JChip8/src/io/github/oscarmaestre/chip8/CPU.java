@@ -2,7 +2,6 @@ package io.github.oscarmaestre.chip8;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
@@ -17,15 +16,15 @@ public class CPU {
     Teclado teclado;
     byte [] registros;
     int[] pila;
-    int registroI;
+    private int registroI;
     int registroPC;
     int registroSP;
     Temporizador delay, sound;
     Random generadorAzar;
-    public CPU(Pantalla _pantalla){
+    public CPU(Pantalla _pantalla, Teclado _teclado){
         memoria = new Memoria();
         pantalla= _pantalla;
-        teclado = new Teclado();
+        teclado = _teclado;
         registros= new byte[TAM_BANCO_REGISTROS];
         pila = new int[TAM_PILA];
         this.registroSP=0;
@@ -106,14 +105,19 @@ public class CPU {
         int nibble2=getNibble(instruccion, 2);
         int nibble3=getNibble(instruccion, 3);
         int nibble4=getNibble(instruccion, 4);
+        //System.out.println(nibble2+" "+nibble3+" "+nibble4);
         int resultado = (int) ((nibble2 << 8 ) + (nibble3 << 4) + nibble4);
+        resultado = resultado & 0b111111111111;
         return resultado;
     }
     
-    public byte getKK(int instruccion){
+    public int getKK(int instruccion){
         byte nibble3=getNibble(instruccion, 3);
         byte nibble4=getNibble(instruccion, 4);
-        byte resultado =  (byte) ((nibble3 << 4) + nibble4);
+        //System.out.println(nibble3+" "+nibble4);
+        int resultado =   ((nibble3 *16) + nibble4);
+        resultado = resultado & 0b11111111;
+        //System.out.println("KK:"+resultado);
         return resultado;
     }
     
@@ -125,7 +129,7 @@ public class CPU {
         }
     }
     
-    public byte getUltimoByte(int instruccion){
+    public int getUltimoByte(int instruccion){
         return this.getKK(instruccion);
     }
     public void ejecutarInstruccion(){
@@ -231,8 +235,11 @@ public class CPU {
         
         
         if ( nibble1 == 0xe ){
-            byte ultimoByte = this.getUltimoByte(instruccion);
+            System.out.println("0xe");
+            int ultimoByte = this.getUltimoByte(instruccion);
+            System.out.println(ultimoByte);
             if (ultimoByte == 0x9e){
+                System.out.println("SKP");
                 this.SKP(instruccion);
             }
             if (ultimoByte == 0xa1){
@@ -241,7 +248,7 @@ public class CPU {
         }
         
         if (nibble1 == 0xf){
-            byte ultimoByte = this.getUltimoByte(instruccion);
+            int ultimoByte = this.getUltimoByte(instruccion);
             if (ultimoByte == 0x07){
                 this.LDTIMER(instruccion);
             }
@@ -284,9 +291,11 @@ public class CPU {
     
     public void CLR(){
         this.pantalla.borrar();
+        System.out.println("Pantalla borrada");
     } //Fin instruccion CLR
     
     public void JMP(int NNN){
+        System.out.println("Saltando a "+NNN);
         this.registroPC = NNN;
     } //Fin instruccion JMP
 
@@ -301,7 +310,7 @@ public class CPU {
 
     public void SE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
-        byte KK = this.getKK(instruccion);
+        int KK = this.getKK(instruccion);
         
         byte valorRegistro = this.registros[numRegistro];
         if (valorRegistro == KK){
@@ -311,7 +320,7 @@ public class CPU {
 
     public void SNE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
-        byte KK = this.getKK(instruccion);
+        int KK = this.getKK(instruccion);
         
         byte valorRegistro = this.registros[numRegistro];
         if (valorRegistro != KK){
@@ -331,13 +340,13 @@ public class CPU {
 
     public void LDBYTE(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
-        byte KK = this.getKK(instruccion);
-        this.registros[numRegistro] = KK;
+        int KK = this.getKK(instruccion);
+        this.registros[numRegistro] = (byte) (KK & 0b11111111);
     }
 
     public void ADD(int instruccion) {
         byte numRegistro=this.getNibble(instruccion, 2);
-        byte KK = this.getKK(instruccion);
+        int KK = this.getKK(instruccion);
         this.registros[numRegistro]+= KK;
     }
 
@@ -453,7 +462,9 @@ public class CPU {
 
     public void LDINNN(int instruccion) {
         int NNN = this.getNNN(instruccion);
-        this.registroI = NNN;
+        
+        this.setRegistroI(NNN);
+        System.out.println("Registro I a:"+this.getRegistroI());
     }
 
     public void JMPNNN(int instruccion) {
@@ -465,13 +476,14 @@ public class CPU {
 
     public void RAND(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
-        byte KK = this.getKK(instruccion);
+        int KK = this.getKK(instruccion);
         byte azar = (byte) this.generadorAzar.nextInt(255);
         byte resultado = (byte) (azar & KK);
         this.registros[numRegistroX] = resultado;
     }
 
     public void DXYN(int instruccion) {
+        System.out.println("Dibujando!");
         byte numRegistroX = this.getNibble(instruccion, 2);
         byte numRegistroY = this.getNibble(instruccion, 3);
         byte n            = this.getNibble(instruccion, 4);
@@ -480,9 +492,17 @@ public class CPU {
         byte valorY = this.registros[numRegistroY];
         
         byte[] bytesSprite = new byte[n];
+        int posParaLeer = this.getRegistroI();
         for (int nByte = 0; nByte < n ; nByte++){
-            bytesSprite[ nByte ] = this.memoria.read(this.registroI);
+            byte dato=this.memoria.read(posParaLeer);
+            String d=String.format("%02x", dato);
+            
+            System.out.println("Dato:"+d+ " de la posicion:"+posParaLeer);
+            bytesSprite[ nByte ] = dato;
+            posParaLeer++;
+            
         }
+        System.out.println("Dibujando en "+valorX+ ","+valorY);
         this.pantalla.dibujarSprite(bytesSprite, valorX, valorY);
     }
 
@@ -520,7 +540,7 @@ public class CPU {
 
     public void STOREI(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
-        int direccion = this.registroI;
+        int direccion = this.getRegistroI();
         for (int i=0; i<=numRegistroX; i++){
             byte valorMemoria=this.memoria.read(direccion);
             direccion++;
@@ -529,7 +549,7 @@ public class CPU {
 
     public void STOREV0(int instruccion) {
         byte numRegistroX = this.getNibble(instruccion, 2);
-        int direccion = this.registroI;
+        int direccion = this.getRegistroI();
         for (int i=0; i<=numRegistroX; i++){
             byte valorRegistro=this.registros[i];
             this.memoria.write(direccion, valorRegistro);
@@ -539,7 +559,7 @@ public class CPU {
 
     public void LOADCHAR(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
-        this.registroI = (int) (valorX * 5);
+        this.setRegistroI((int) (valorX * 5));
     }
 
     public void BCD(int instruccion) {
@@ -550,9 +570,9 @@ public class CPU {
         byte decenas = (byte) (cantidad / 10);
         byte unidades = (byte) (cantidad % 10);
         
-        this.memoria.write(this.registroI   , centenas);
-        this.memoria.write(this.registroI+1 , decenas);
-        this.memoria.write(this.registroI+2 , unidades);
+        this.memoria.write(this.getRegistroI(), centenas);
+        this.memoria.write(this.getRegistroI()+1 , decenas);
+        this.memoria.write(this.getRegistroI()+2 , unidades);
         
     }
 
@@ -568,8 +588,23 @@ public class CPU {
 
     public void ADDI(int instruccion) {
         byte valorX = this.getNibble(instruccion, 2);
-        int nuevoI=(int) (this.registroI + valorX);
-        this.registroI = nuevoI;
+        int nuevoI=(int) (this.getRegistroI() + valorX);
+        this.setRegistroI(nuevoI);
+    }
+
+    /**
+     * @return the registroI
+     */
+    public int getRegistroI() {
+        return registroI;
+    }
+
+    /**
+     * @param registroI the registroI to set
+     */
+    public void setRegistroI(int registroI) {
+        System.out.println("Nuevo valor de I:"+registroI);
+        this.registroI = registroI;
     }
     
 }

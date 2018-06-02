@@ -3,10 +3,10 @@ package io.github.oscarmaestre.chip8;
 import java.util.BitSet;
 
 public abstract class Pantalla {
-    final int   ANCHO     =   64;
-    final int   ALTO      =   32;
+    final int   COLUMNAS     =   65;
+    final int   FILAS      =   65;
     int         escala    =   8;
-    boolean[][] memoria = new boolean[ALTO][ANCHO];
+    boolean[][] memoria = new boolean[FILAS][COLUMNAS];
     
     public abstract void borrar();
     public void setEscala ( int _escala ){
@@ -33,10 +33,11 @@ public abstract class Pantalla {
                 desactivarPixel(x, y);
             }
             x=x+1;
-            if (x>ANCHO){
+            if (x>COLUMNAS){
                 x=0;
             }
         }
+        actualizar();
     }
     abstract public void actualizar();
 }

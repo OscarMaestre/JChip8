@@ -32,9 +32,11 @@ public class Interfaz extends javax.swing.JFrame {
     public Interfaz() {
         initComponents();
         pantallaCPU=new PantallaJPanel();
+        Teclado teclado=new Teclado();
+        teclado.setValorTecla((byte)13);
         pantallaCPU.setPanel(pantalla);
         System.out.println("Listo");
-        cpu=new CPU(pantallaCPU);
+        cpu=new CPU(pantallaCPU, teclado);
         cpu.dibujarAlgo();
         System.out.println("Ok");
     }
@@ -59,6 +61,7 @@ public class Interfaz extends javax.swing.JFrame {
         pantalla = new javax.swing.JPanel();
         btnPaso = new javax.swing.JButton();
         btnEjecutar = new javax.swing.JButton();
+        btnNext = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuLoad = new javax.swing.JMenuItem();
@@ -81,6 +84,13 @@ public class Interfaz extends javax.swing.JFrame {
             }
         });
 
+        btnNext.setText("Siguiente instruccion");
+        btnNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pantallaLayout = new javax.swing.GroupLayout(pantalla);
         pantalla.setLayout(pantallaLayout);
         pantallaLayout.setHorizontalGroup(
@@ -90,7 +100,9 @@ public class Interfaz extends javax.swing.JFrame {
                 .addComponent(btnPaso)
                 .addGap(18, 18, 18)
                 .addComponent(btnEjecutar)
-                .addContainerGap(289, Short.MAX_VALUE))
+                .addGap(41, 41, 41)
+                .addComponent(btnNext)
+                .addContainerGap(64, Short.MAX_VALUE))
         );
         pantallaLayout.setVerticalGroup(
             pantallaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -98,7 +110,8 @@ public class Interfaz extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(pantallaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnPaso)
-                    .addComponent(btnEjecutar))
+                    .addComponent(btnEjecutar)
+                    .addComponent(btnNext))
                 .addContainerGap(437, Short.MAX_VALUE))
         );
 
@@ -167,6 +180,10 @@ public class Interfaz extends javax.swing.JFrame {
         cpu.ejecutar(0x200);
     }//GEN-LAST:event_btnEjecutarActionPerformed
 
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        cpu.ejecutarInstruccion();
+    }//GEN-LAST:event_btnNextActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -205,6 +222,7 @@ public class Interfaz extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnEjecutar;
+    private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPaso;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;

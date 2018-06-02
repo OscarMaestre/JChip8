@@ -6,6 +6,7 @@
 
 import io.github.oscarmaestre.chip8.CPU;
 import io.github.oscarmaestre.chip8.PantallaJPanel;
+import io.github.oscarmaestre.chip8.Teclado;
 import javax.swing.JFrame;
 import junit.framework.Assert;
 import org.junit.After;
@@ -39,7 +40,8 @@ public class PruebaNibble {
         String fich="/home/usuario/Descargas/Roger.ch8";
         PantallaJPanel p=new PantallaJPanel();
         p.setContextoGrafico(frame.getGraphics());
-        cpu=new CPU(p);
+        Teclado t=new Teclado();
+        cpu=new CPU(p, t);
     }
     
     @After
@@ -76,6 +78,13 @@ public class PruebaNibble {
         short nibble1=(short) 0b1111111111110101;
         int nibbleResultado=cpu.getNibble(nibble1, 4);
         Assert.assertEquals(5, nibbleResultado);        
+    }
+    
+    @Test 
+    public void getUltimoByte(){
+        int instruccion = 0b1010101011111111;
+        int resultado= cpu.getUltimoByte(instruccion) ;
+        Assert.assertEquals(255, resultado);        
     }
     
     

@@ -21,8 +21,8 @@ public class PantallaJPanel extends Pantalla{
     @Override
     public void actualizar() {
         
-        for (int fila=0; fila < this.ALTO; fila++){
-            for (int columna = 0 ; columna < this.ANCHO; columna++){
+        for (int fila=0; fila < this.FILAS; fila++){
+            for (int columna = 0 ; columna < this.COLUMNAS; columna++){
                 if (this.memoria[fila][columna]){
                     contextoGrafico.fillRect(fila*escala, columna*escala, escala, escala);
                 }
@@ -32,8 +32,8 @@ public class PantallaJPanel extends Pantalla{
 
     @Override
     public void borrar() {
-        for (int fila=0; fila < this.ALTO; fila++){
-            for (int columna = 0 ; columna < this.ANCHO; columna++){
+        for (int fila=0; fila < this.FILAS; fila++){
+            for (int columna = 0 ; columna < this.COLUMNAS; columna++){
                 this.memoria[fila][columna] = false;
                 
             }
